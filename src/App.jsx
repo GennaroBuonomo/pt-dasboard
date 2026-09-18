@@ -5,18 +5,27 @@ import './App.css';
 function App() {
   // --- STATI DI NAVIGAZIONE E UI ---
   const [currentView, setCurrentView] = useState('panoramica');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(''); 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // --- STATO DEI DATI ---
   const [clients, setClients] = useState(mockClients);
 
-  // --- STATI DEL FORM ---
+  // --- STATI DEL FORM NUOVO CLIENTE ---
   const [newClientName, setNewClientName] = useState('');
   const [newClientGoal, setNewClientGoal] = useState('');
   const [newClientLevel, setNewClientLevel] = useState('');
 
-  // --- FUNZIONE DI SALVATAGGIO CLIENTE ---
+  // --- STATI PER LA CREAZIONE SCHEDA ---
+  const [selectedClientForWorkout, setSelectedClientForWorkout] = useState('');
+  const [currentWorkout, setCurrentWorkout] = useState([]);
+  
+  // --- STATI PER RICERCA E TENDINE (ACCORDION) ESERCIZI ---
+  const [exerciseSearchQuery, setExerciseSearchQuery] = useState('');
+  // Oggetto per tracciare quali categorie muscolari sono aperte (es. { Petto: true, Gambe: false })
+  const [openCategories, setOpenCategories] = useState({});
+
+  // --- FUNZIONE: SALVA NUOVO CLIENTE ---
   const handleAddClient = (e) => {
     e.preventDefault(); 
     const newClient = {
@@ -28,23 +37,53 @@ function App() {
     };
 
     setClients([...clients, newClient]);
-
     setNewClientName('');
     setNewClientGoal('');
     setNewClientLevel('');
     setIsModalOpen(false);
   };
 
+  // --- FUNZIONI: GESTIONE SCHEDA ALLENAMENTO ---
+  const handleAddExerciseToWorkout = (exercise) => {
+    setCurrentWorkout([...currentWorkout, { ...exercise, sets: 3, reps: '10' }]);
+  };
+
+  const removeExerciseFromWorkout = (indexToRemove) => {
+    setCurrentWorkout(currentWorkout.filter((_, index) => index !== indexToRemove));
+  };
+
+  const updateWorkoutItem = (index, field, value) => {
+    const updatedWorkout = [...currentWorkout];
+    updatedWorkout[index][field] = value;
+    setCurrentWorkout(updatedWorkout);
+  };
+
+  const saveWorkout = () => {
+    const client = clients.find(c => c.id.toString() === selectedClientForWorkout);
+    alert(`Scheda salvata con successo per ${client.name}! \n(Totale esercizi: ${currentWorkout.length})`);
+    setCurrentWorkout([]);
+    setSelectedClientForWorkout('');
+    setExerciseSearchQuery('');
+  };
+
+  // Funzione per aprire/chiudere la tendina di un gruppo muscolare
+  const toggleCategory = (category) => {
+    setOpenCategories(prev => ({
+      ...prev,
+      [category]: !prev[category]
+    }));
+  };
+
   // --- RENDERIZZAZIONE DEL CONTENUTO CENTRALE ---
   const renderMainContent = () => {
     switch (currentView) {
+      
+      // ------ VISTA: PANORAMICA ------
       case 'panoramica': {
-        // Calcoli per la vista Panoramica
         const activeClientsCount = clients.filter(c => c.status === 'Attivo').length;
         const totalClients = clients.length;
         const totalExercises = mockExercises.length;
 
-        // Calcoli per il Grafico Dinamico (insensibile alle maiuscole)
         const ipertrofia = clients.filter(c => c.goal.toLowerCase().includes('ipertrofia')).length;
         const forza = clients.filter(c => c.goal.toLowerCase().includes('forza')).length;
         const dimagrimento = clients.filter(c => c.goal.toLowerCase().includes('dimagrimento')).length;
@@ -57,7 +96,6 @@ function App() {
         const percDim = Math.round((dimagrimento / totalGoals) * 100) || 0;
         const percRic = Math.round((ricondizionamento / totalGoals) * 100) || 0;
 
-        // "Stop" per il conic-gradient CSS
         const stop1 = percIper;
         const stop2 = stop1 + percForza;
         const stop3 = stop2 + percDim;
@@ -94,7 +132,6 @@ function App() {
               <h3 style={{ marginBottom: '20px', color: '#1a1a2e' }}>Distribuzione Obiettivi</h3>
               <div className="chart-layout">
                 <div className="mock-pie-chart" style={dynamicGradient}></div>
-                
                 <div className="chart-legend">
                   <ul>
                     <li><span className="legend-dot" style={{backgroundColor: '#3b82f6'}}></span> Ipertrofia ({percIper}%)</li>
@@ -109,6 +146,7 @@ function App() {
         );
       }
       
+      // ------ VISTA: CLIENTI ------
       case 'clienti': {
         const filteredClients = clients.filter(client => 
           client.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -137,7 +175,15 @@ function App() {
                     <p><strong>Livello:</strong> {client.level}</p>
                   </div>
                   <div className="card-actions">
-                    <button className="btn-secondary">Vedi Scheda</button>
+                    <button 
+                      className="btn-secondary"
+                      onClick={() => {
+                        setSelectedClientForWorkout(client.id.toString());
+                        setCurrentView('schede');
+                      }}
+                    >
+                      Assegna Scheda
+                    </button>
                   </div>
                 </div>
               ))}
@@ -150,8 +196,157 @@ function App() {
         );
       }
 
-      case 'schede':
-        return <h1 style={{ color: '#1a1a2e' }}>Gestione Schede Allenamento</h1>;
+      // ------ VISTA: SCHEDE ALLENAMENTO ------
+      case 'schede': {
+        // 1. Filtriamo gli esercizi in base alla barra di ricerca
+        const searchedExercises = mockExercises.filter(ex => 
+          ex.name.toLowerCase().includes(exerciseSearchQuery.toLowerCase())
+        );
+
+        // 2. Raggruppiamo gli esercizi per categoria
+        const groupedExercises = searchedExercises.reduce((acc, curr) => {
+          if (!acc[curr.muscle]) acc[curr.muscle] = [];
+          acc[curr.muscle].push(curr);
+          return acc;
+        }, {});
+
+        return (
+          <div className="dashboard-view">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+              <h1 style={{ color: '#1a1a2e' }}>Creazione Scheda</h1>
+              
+              <select 
+                value={selectedClientForWorkout} 
+                onChange={(e) => setSelectedClientForWorkout(e.target.value)}
+                className="client-select"
+              >
+                <option value="">-- Seleziona un Cliente --</option>
+                {clients.filter(c => c.status === 'Attivo').map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="workout-builder">
+              {/* PARTE SINISTRA: Catalogo a Tendina */}
+              <div className="builder-section">
+                <h3 style={{ marginBottom: '15px' }}>Catalogo Esercizi</h3>
+                
+                <div className="exercise-filters">
+                  <input 
+                    type="text" 
+                    placeholder="Cerca esercizio..." 
+                    value={exerciseSearchQuery}
+                    onChange={(e) => setExerciseSearchQuery(e.target.value)}
+                    className="filter-input full-width"
+                  />
+                </div>
+
+                <div className="exercise-catalog">
+                  {Object.keys(groupedExercises).length > 0 ? (
+                    Object.keys(groupedExercises).sort().map(muscleGroup => {
+                      // Se l'utente sta cercando, teniamo aperta la tendina per mostrare i risultati, 
+                      // altrimenti usiamo lo stato dei click.
+                      const isOpen = exerciseSearchQuery.trim() !== '' || openCategories[muscleGroup];
+
+                      return (
+                        <div key={muscleGroup} className="muscle-accordion">
+                          
+                          {/* Intestazione della Tendina Cliccabile */}
+                          <div 
+                            className={`accordion-header ${isOpen ? 'open' : ''}`} 
+                            onClick={() => toggleCategory(muscleGroup)}
+                          >
+                            <h4>{muscleGroup.toUpperCase()}</h4>
+                            <span className="accordion-icon">{isOpen ? '▲' : '▼'}</span>
+                          </div>
+                          
+                          {/* Contenuto della tendina (renderizzato solo se isOpen è true) */}
+                          {isOpen && (
+                            <div className="accordion-content">
+                              {groupedExercises[muscleGroup].map(ex => (
+                                <div key={ex.id} className="exercise-item">
+                                  <div>
+                                    <strong>{ex.name}</strong>
+                                    <p style={{ fontSize: '0.8rem', color: '#666', marginTop: '4px' }}>
+                                      {ex.type} • {ex.equipment}
+                                    </p>
+                                  </div>
+                                  <button 
+                                    className="btn-secondary add-btn" 
+                                    onClick={() => handleAddExerciseToWorkout(ex)}
+                                    disabled={!selectedClientForWorkout}
+                                    title={!selectedClientForWorkout ? "Seleziona un cliente prima" : "Aggiungi alla scheda"}
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })
+                  ) : (
+                    <p style={{ color: '#666', textAlign: 'center', marginTop: '20px' }}>Nessun esercizio trovato.</p>
+                  )}
+                </div>
+              </div>
+
+              {/* PARTE DESTRA: Scheda Attuale */}
+              <div className="builder-section">
+                <h3 style={{ marginBottom: '15px', paddingBottom: '10px', borderBottom: '2px solid #f7f9fc' }}>Scheda in Costruzione</h3>
+                
+                {!selectedClientForWorkout ? (
+                  <div className="empty-state">
+                    <p>Seleziona un cliente in alto a destra per iniziare a costruire la scheda.</p>
+                  </div>
+                ) : currentWorkout.length === 0 ? (
+                  <div className="empty-state">
+                    <p>La scheda è vuota. Apri le categorie a sinistra e seleziona gli esercizi.</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="current-workout-list">
+                      {currentWorkout.map((item, index) => (
+                        <div key={index} className="workout-item">
+                          <strong style={{ flex: 1 }}>{item.name}</strong>
+                          
+                          <div className="workout-inputs">
+                            <div className="input-group">
+                              <label>Serie</label>
+                              <input 
+                                type="number" 
+                                min="1" 
+                                value={item.sets} 
+                                onChange={(e) => updateWorkoutItem(index, 'sets', e.target.value)} 
+                              />
+                            </div>
+                            <span style={{ marginTop: '15px', color: '#666' }}>x</span>
+                            <div className="input-group">
+                              <label>Rip</label>
+                              <input 
+                                type="text" 
+                                value={item.reps} 
+                                onChange={(e) => updateWorkoutItem(index, 'reps', e.target.value)} 
+                              />
+                            </div>
+                            <button className="btn-danger" onClick={() => removeExerciseFromWorkout(index)}>✕</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <button className="btn-primary" style={{width: '100%', marginTop: '30px', padding: '15px'}} onClick={saveWorkout}>
+                      Salva Scheda ({currentWorkout.length} esercizi)
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      }
 
       default:
         return <h1>404 - Vista non trovata</h1>;
@@ -161,7 +356,6 @@ function App() {
   return (
     <div className="dashboard-layout">
       
-      {/* SIDEBAR */}
       <aside className="sidebar">
         <div className="logo">
           <h2>PT Dashboard</h2>
@@ -190,7 +384,6 @@ function App() {
         </nav>
       </aside>
 
-      {/* HEADER */}
       <header className="top-header">
         <div className="search-bar">
           <span className="icon">🔍</span>
@@ -207,7 +400,6 @@ function App() {
         </div>
       </header>
 
-      {/* MAIN CONTENT */}
       <main className="main-content">
         {renderMainContent()}
       </main>

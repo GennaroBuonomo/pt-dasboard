@@ -252,9 +252,32 @@
   transition: all 0.2s;
 }
 
-.btn-secondary:hover {
+.btn-secondary:hover:not(:disabled) {
   background-color: #3b82f6;
   color: white;
+}
+
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-color: #ccc;
+  color: #999;
+}
+
+.btn-danger {
+  background-color: #fee2e2;
+  color: #dc2626;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-top: 15px;
+  transition: background 0.2s;
+}
+
+.btn-danger:hover {
+  background-color: #fca5a5;
 }
 
 /* ---------------- FINESTRA MODALE ---------------- */
@@ -291,5 +314,175 @@
 }
 
 .modal-content input:focus, .modal-content select:focus {
+  border-color: #3b82f6;
+}
+
+/* ---------------- BUILDER SCHEDE ALLENAMENTO ---------------- */
+.client-select {
+  padding: 10px 15px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  min-width: 300px;
+  font-size: 1rem;
+  outline: none;
+}
+
+.client-select:focus {
+  border-color: #3b82f6;
+}
+
+.workout-builder {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+.builder-section {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  min-height: 500px;
+}
+
+/* Filtri Catalogo Esercizi */
+.exercise-filters {
+  display: flex;
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+}
+
+.filter-input.full-width {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  outline: none;
+  font-size: 0.9rem;
+}
+
+.filter-input.full-width:focus {
+  border-color: #3b82f6;
+}
+
+/* --- STILI PER LE TENDINE (ACCORDION) --- */
+.exercise-catalog {
+  max-height: 450px;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.muscle-accordion {
+  margin-bottom: 10px;
+  border: 1px solid #eaeaea;
+  border-radius: 8px;
+  overflow: hidden; /* Mantiene gli angoli arrotondati puliti */
+}
+
+.accordion-header {
+  background-color: #f9fafb;
+  padding: 12px 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  color: #1a1a2e;
+}
+
+.accordion-header:hover {
+  background-color: #f3f4f6;
+}
+
+.accordion-header.open {
+  background-color: #e5e7eb; /* Leggermente più scuro quando è aperto */
+  border-bottom: 1px solid #eaeaea;
+}
+
+.accordion-icon {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.accordion-content {
+  padding: 0 15px;
+  background-color: white;
+}
+
+/* Personalizziamo la barra di scorrimento */
+.exercise-catalog::-webkit-scrollbar {
+  width: 6px;
+}
+.exercise-catalog::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 4px;
+}
+
+/* Resto degli stili (esercizi ed empty state) */
+.empty-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  background-color: #f9fafb;
+  border-radius: 8px;
+  border: 1px dashed #d1d5db;
+  padding: 20px;
+}
+
+.exercise-item, .workout-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.exercise-item:last-child, .workout-item:last-child {
+  border-bottom: none;
+}
+
+.add-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.2rem;
+  padding: 0;
+}
+
+.workout-inputs {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.input-group label {
+  font-size: 0.75rem;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.input-group input {
+  width: 60px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  text-align: center;
+  outline: none;
+}
+
+.input-group input:focus {
   border-color: #3b82f6;
 }
