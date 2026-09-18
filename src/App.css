@@ -23,6 +23,8 @@
   background-color: #1a1a2e;
   color: white;
   padding: 20px;
+  z-index: 1000;
+  transition: transform 0.3s ease;
 }
 
 .sidebar .logo {
@@ -66,6 +68,16 @@
   padding: 0 30px;
 }
 
+/* Hamburger nascosto su Desktop */
+.hamburger-btn {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.8rem;
+  color: #1a1a2e;
+  cursor: pointer;
+}
+
 .search-bar, .user-profile {
   display: flex;
   align-items: center;
@@ -84,7 +96,7 @@
   border-color: #3b82f6;
 }
 
-/* ---------------- MAIN CONTENT ---------------- */
+/* ---------------- MAIN CONTENT E HEADERS COMUNI ---------------- */
 .main-content {
   grid-area: main;
   background-color: #f7f9fc;
@@ -92,7 +104,14 @@
   overflow-y: auto;
 }
 
-/* ---------------- VISTA PANORAMICA E GRAFICO ---------------- */
+.view-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+/* ---------------- VISTA PANORAMICA ---------------- */
 .kpi-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -177,7 +196,7 @@
   display: inline-block;
 }
 
-/* ---------------- VISTA CLIENTI E CARD ---------------- */
+/* ---------------- VISTA CLIENTI ---------------- */
 .clients-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -214,15 +233,8 @@
   font-weight: bold;
 }
 
-.badge-active {
-  background-color: #d1fae5;
-  color: #065f46;
-}
-
-.badge-paused {
-  background-color: #fee2e2;
-  color: #991b1b;
-}
+.badge-active { background-color: #d1fae5; color: #065f46; }
+.badge-paused { background-color: #fee2e2; color: #991b1b; }
 
 /* ---------------- BOTTONI ---------------- */
 .btn-primary {
@@ -233,11 +245,7 @@
   border-radius: 6px;
   cursor: pointer;
   font-weight: bold;
-  transition: background 0.2s;
-}
-
-.btn-primary:hover {
-  background-color: #2563eb;
+  width: 100%;
 }
 
 .btn-secondary {
@@ -249,12 +257,6 @@
   cursor: pointer;
   width: 100%;
   font-weight: bold;
-  transition: all 0.2s;
-}
-
-.btn-secondary:hover:not(:disabled) {
-  background-color: #3b82f6;
-  color: white;
 }
 
 .btn-secondary:disabled {
@@ -267,17 +269,30 @@
 .btn-danger {
   background-color: #fee2e2;
   color: #dc2626;
-  border: none;
+  border: 1px solid #fca5a5;
   padding: 8px 12px;
   border-radius: 6px;
   cursor: pointer;
+  width: 100%;
   font-weight: bold;
-  margin-top: 15px;
-  transition: background 0.2s;
 }
 
-.btn-danger:hover {
-  background-color: #fca5a5;
+.btn-success {
+  background-color: #d1fae5;
+  color: #059669;
+  border: 1px solid #6ee7b7;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  width: 100%;
+  font-weight: bold;
+}
+
+/* Bottone rosso per eliminare esercizi */
+.workout-inputs .btn-danger {
+  width: auto;
+  margin-top: 0;
+  padding: 8px;
 }
 
 /* ---------------- FINESTRA MODALE ---------------- */
@@ -296,12 +311,7 @@
   padding: 30px;
   border-radius: 10px;
   width: 400px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-}
-
-.modal-content h2 {
-  margin-bottom: 20px;
-  color: #1a1a2e;
+  max-width: 90%;
 }
 
 .modal-content input, .modal-content select {
@@ -313,22 +323,13 @@
   outline: none;
 }
 
-.modal-content input:focus, .modal-content select:focus {
-  border-color: #3b82f6;
-}
-
 /* ---------------- BUILDER SCHEDE ALLENAMENTO ---------------- */
 .client-select {
   padding: 10px 15px;
   border-radius: 8px;
   border: 1px solid #ccc;
-  min-width: 300px;
+  min-width: 250px;
   font-size: 1rem;
-  outline: none;
-}
-
-.client-select:focus {
-  border-color: #3b82f6;
 }
 
 .workout-builder {
@@ -345,11 +346,11 @@
   min-height: 500px;
 }
 
-/* Filtri Catalogo Esercizi */
 .exercise-filters {
   display: flex;
   margin-bottom: 15px;
   padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
 }
 
 .filter-input.full-width {
@@ -357,81 +358,38 @@
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 6px;
-  outline: none;
-  font-size: 0.9rem;
 }
 
-.filter-input.full-width:focus {
-  border-color: #3b82f6;
-}
-
-/* --- STILI PER LE TENDINE (ACCORDION) --- */
 .exercise-catalog {
-  max-height: 450px;
+  max-height: 400px;
   overflow-y: auto;
   padding-right: 10px;
 }
 
-.muscle-accordion {
+.muscle-group-accordion {
   margin-bottom: 10px;
-  border: 1px solid #eaeaea;
+  border: 1px solid #eee;
   border-radius: 8px;
-  overflow: hidden; /* Mantiene gli angoli arrotondati puliti */
+  background-color: #fff;
 }
 
-.accordion-header {
-  background-color: #f9fafb;
+.muscle-category-title {
+  background-color: #f7f9fc;
   padding: 12px 15px;
+  font-weight: bold;
+  color: #1a1a2e;
+  cursor: pointer;
+  list-style: none;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  color: #1a1a2e;
 }
 
-.accordion-header:hover {
-  background-color: #f3f4f6;
-}
+.muscle-category-title::-webkit-details-marker { display: none; }
+.muscle-category-title::after { content: '▼'; font-size: 0.8rem; color: #666; transition: transform 0.2s ease; }
+details[open] .muscle-category-title::after { transform: rotate(180deg); color: #3b82f6; }
 
-.accordion-header.open {
-  background-color: #e5e7eb; /* Leggermente più scuro quando è aperto */
-  border-bottom: 1px solid #eaeaea;
-}
-
-.accordion-icon {
-  font-size: 0.8rem;
-  color: #6b7280;
-}
-
-.accordion-content {
-  padding: 0 15px;
-  background-color: white;
-}
-
-/* Personalizziamo la barra di scorrimento */
-.exercise-catalog::-webkit-scrollbar {
-  width: 6px;
-}
-.exercise-catalog::-webkit-scrollbar-thumb {
-  background-color: #ccc;
-  border-radius: 4px;
-}
-
-/* Resto degli stili (esercizi ed empty state) */
-.empty-state {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 200px;
-  text-align: center;
-  color: #666;
-  font-style: italic;
-  background-color: #f9fafb;
-  border-radius: 8px;
-  border: 1px dashed #d1d5db;
-  padding: 20px;
-}
+.accordion-content { padding: 0 15px; }
 
 .exercise-item, .workout-item {
   display: flex;
@@ -441,19 +399,24 @@
   border-bottom: 1px solid #f3f4f6;
 }
 
-.exercise-item:last-child, .workout-item:last-child {
-  border-bottom: none;
-}
-
 .add-btn {
   width: 40px;
   height: 40px;
   border-radius: 50%;
+  padding: 0;
+}
+
+.empty-state {
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 1.2rem;
-  padding: 0;
+  height: 200px;
+  text-align: center;
+  color: #666;
+  background-color: #f9fafb;
+  border-radius: 8px;
+  border: 1px dashed #d1d5db;
+  padding: 20px;
 }
 
 .workout-inputs {
@@ -462,27 +425,95 @@
   gap: 15px;
 }
 
-.input-group {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
+.input-group { display: flex; flex-direction: column; align-items: center; }
+.input-group label { font-size: 0.75rem; color: #666; margin-bottom: 4px; }
+.input-group input { width: 50px; padding: 8px; border: 1px solid #ddd; border-radius: 6px; text-align: center; }
 
-.input-group label {
-  font-size: 0.75rem;
-  color: #666;
-  margin-bottom: 4px;
-}
 
-.input-group input {
-  width: 60px;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  text-align: center;
-  outline: none;
-}
+/* =========================================================
+   MEDIA QUERIES (RESPONSIVE DESIGN PER MOBILE E TABLET) 
+========================================================= */
 
-.input-group input:focus {
-  border-color: #3b82f6;
+@media (max-width: 768px) {
+  
+  /* Trasforma la griglia principale in una singola colonna */
+  .dashboard-layout {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "header"
+      "main";
+  }
+
+  /* Mostra il bottone Hamburger */
+  .hamburger-btn {
+    display: block;
+  }
+
+  /* Nascondi nome profilo o barra di ricerca superflua su schermi molto piccoli */
+  .profile-name {
+    display: none;
+  }
+
+  .search-bar input {
+    width: 150px;
+  }
+
+  /* SIDEBAR MOBILE: Nascosta di default (fuori dallo schermo) */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 250px;
+    transform: translateX(-100%); /* Nasconde a sinistra */
+    box-shadow: 2px 0 15px rgba(0,0,0,0.5);
+  }
+
+  /* Quando lo stato isMobileMenuOpen è true, aggiungiamo la classe .open */
+  .sidebar.open {
+    transform: translateX(0); /* Fa scorrere la sidebar nello schermo */
+  }
+
+  /* Overlay scuro dietro la sidebar aperta */
+  .mobile-overlay-sidebar {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 999; /* Subito sotto la sidebar che ha z-index 1000 */
+  }
+
+  /* COMPONENTI PANORAMICA: Impila in verticale */
+  .kpi-row {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-layout {
+    flex-direction: column;
+    gap: 30px;
+  }
+
+  .mock-pie-chart {
+    width: 200px;
+    height: 200px;
+  }
+
+  /* VIEW HEADER: Impila in verticale se serve */
+  .view-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .view-header button, .view-header select {
+    width: 100%;
+  }
+
+  /* BUILDER SCHEDE: Impila Catalogo e Scheda in verticale */
+  .workout-builder {
+    grid-template-columns: 1fr;
+  }
+  
+  .workout-inputs {
+    gap: 8px;
+  }
 }

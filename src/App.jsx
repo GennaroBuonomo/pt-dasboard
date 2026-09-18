@@ -7,6 +7,7 @@ function App() {
   const [currentView, setCurrentView] = useState('panoramica');
   const [searchQuery, setSearchQuery] = useState(''); 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // NUOVO STATO MOBILE
 
   // --- STATO DEI DATI ---
   const [clients, setClients] = useState(mockClients);
@@ -20,10 +21,8 @@ function App() {
   const [selectedClientForWorkout, setSelectedClientForWorkout] = useState('');
   const [currentWorkout, setCurrentWorkout] = useState([]);
   
-  // --- STATI PER RICERCA E TENDINE (ACCORDION) ESERCIZI ---
+  // --- STATO RICERCA ESERCIZI ---
   const [exerciseSearchQuery, setExerciseSearchQuery] = useState('');
-  // Oggetto per tracciare quali categorie muscolari sono aperte (es. { Petto: true, Gambe: false })
-  const [openCategories, setOpenCategories] = useState({});
 
   // --- FUNZIONE: SALVA NUOVO CLIENTE ---
   const handleAddClient = (e) => {
@@ -41,6 +40,20 @@ function App() {
     setNewClientGoal('');
     setNewClientLevel('');
     setIsModalOpen(false);
+  };
+
+  // --- FUNZIONE: CAMBIA STATO CLIENTE ---
+  const toggleClientStatus = (clientId) => {
+    const updatedClients = clients.map(client => {
+      if (client.id === clientId) {
+        return { 
+          ...client, 
+          status: client.status === 'Attivo' ? 'In pausa' : 'Attivo' 
+        };
+      }
+      return client;
+    });
+    setClients(updatedClients);
   };
 
   // --- FUNZIONI: GESTIONE SCHEDA ALLENAMENTO ---
@@ -66,19 +79,15 @@ function App() {
     setExerciseSearchQuery('');
   };
 
-  // Funzione per aprire/chiudere la tendina di un gruppo muscolare
-  const toggleCategory = (category) => {
-    setOpenCategories(prev => ({
-      ...prev,
-      [category]: !prev[category]
-    }));
+  // Funzione helper per la navigazione mobile
+  const changeView = (view) => {
+    setCurrentView(view);
+    setIsMobileMenuOpen(false); // Chiude la sidebar se sei su mobile
   };
 
   // --- RENDERIZZAZIONE DEL CONTENUTO CENTRALE ---
   const renderMainContent = () => {
     switch (currentView) {
-      
-      // ------ VISTA: PANORAMICA ------
       case 'panoramica': {
         const activeClientsCount = clients.filter(c => c.status === 'Attivo').length;
         const totalClients = clients.length;
@@ -123,7 +132,7 @@ function App() {
                 <p>{totalClients}</p>
               </div>
               <div className="kpi-card">
-                <h3>Esercizi a Catalogo</h3>
+                <h3>Esercizi</h3>
                 <p>{totalExercises}</p>
               </div>
             </div>
@@ -137,7 +146,7 @@ function App() {
                     <li><span className="legend-dot" style={{backgroundColor: '#3b82f6'}}></span> Ipertrofia ({percIper}%)</li>
                     <li><span className="legend-dot" style={{backgroundColor: '#10b981'}}></span> Forza ({percForza}%)</li>
                     <li><span className="legend-dot" style={{backgroundColor: '#f59e0b'}}></span> Dimagrimento ({percDim}%)</li>
-                    <li><span className="legend-dot" style={{backgroundColor: '#8b5cf6'}}></span> Ricondizionamento ({percRic}%)</li>
+                    <li><span className="legend-dot" style={{backgroundColor: '#8b5cf6'}}></span> Ricondiz. ({percRic}%)</li>
                   </ul>
                 </div>
               </div>
@@ -146,7 +155,6 @@ function App() {
         );
       }
       
-      // ------ VISTA: CLIENTI ------
       case 'clienti': {
         const filteredClients = clients.filter(client => 
           client.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -154,7 +162,7 @@ function App() {
 
         return (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <div className="view-header">
               <h1 style={{ color: '#1a1a2e' }}>Gestione Clienti</h1>
               <button className="btn-primary" onClick={() => setIsModalOpen(true)}>
                 + Nuovo Cliente
@@ -174,15 +182,23 @@ function App() {
                     <p><strong>Obiettivo:</strong> {client.goal}</p>
                     <p><strong>Livello:</strong> {client.level}</p>
                   </div>
-                  <div className="card-actions">
+                  
+                  <div className="card-actions" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     <button 
                       className="btn-secondary"
+                      disabled={client.status !== 'Attivo'}
                       onClick={() => {
                         setSelectedClientForWorkout(client.id.toString());
-                        setCurrentView('schede');
+                        changeView('schede');
                       }}
                     >
                       Assegna Scheda
+                    </button>
+                    <button 
+                      className={client.status === 'Attivo' ? 'btn-danger' : 'btn-success'}
+                      onClick={() => toggleClientStatus(client.id)}
+                    >
+                      {client.status === 'Attivo' ? 'Metti in pausa' : 'Riattiva Cliente'}
                     </button>
                   </div>
                 </div>
@@ -196,14 +212,11 @@ function App() {
         );
       }
 
-      // ------ VISTA: SCHEDE ALLENAMENTO ------
       case 'schede': {
-        // 1. Filtriamo gli esercizi in base alla barra di ricerca
         const searchedExercises = mockExercises.filter(ex => 
           ex.name.toLowerCase().includes(exerciseSearchQuery.toLowerCase())
         );
 
-        // 2. Raggruppiamo gli esercizi per categoria
         const groupedExercises = searchedExercises.reduce((acc, curr) => {
           if (!acc[curr.muscle]) acc[curr.muscle] = [];
           acc[curr.muscle].push(curr);
@@ -212,15 +225,14 @@ function App() {
 
         return (
           <div className="dashboard-view">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+            <div className="view-header">
               <h1 style={{ color: '#1a1a2e' }}>Creazione Scheda</h1>
-              
               <select 
                 value={selectedClientForWorkout} 
                 onChange={(e) => setSelectedClientForWorkout(e.target.value)}
                 className="client-select"
               >
-                <option value="">-- Seleziona un Cliente --</option>
+                <option value="">-- Seleziona Cliente --</option>
                 {clients.filter(c => c.status === 'Attivo').map(c => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
@@ -228,7 +240,6 @@ function App() {
             </div>
 
             <div className="workout-builder">
-              {/* PARTE SINISTRA: Catalogo a Tendina */}
               <div className="builder-section">
                 <h3 style={{ marginBottom: '15px' }}>Catalogo Esercizi</h3>
                 
@@ -244,66 +255,52 @@ function App() {
 
                 <div className="exercise-catalog">
                   {Object.keys(groupedExercises).length > 0 ? (
-                    Object.keys(groupedExercises).sort().map(muscleGroup => {
-                      // Se l'utente sta cercando, teniamo aperta la tendina per mostrare i risultati, 
-                      // altrimenti usiamo lo stato dei click.
-                      const isOpen = exerciseSearchQuery.trim() !== '' || openCategories[muscleGroup];
-
-                      return (
-                        <div key={muscleGroup} className="muscle-accordion">
-                          
-                          {/* Intestazione della Tendina Cliccabile */}
-                          <div 
-                            className={`accordion-header ${isOpen ? 'open' : ''}`} 
-                            onClick={() => toggleCategory(muscleGroup)}
-                          >
-                            <h4>{muscleGroup.toUpperCase()}</h4>
-                            <span className="accordion-icon">{isOpen ? '▲' : '▼'}</span>
-                          </div>
-                          
-                          {/* Contenuto della tendina (renderizzato solo se isOpen è true) */}
-                          {isOpen && (
-                            <div className="accordion-content">
-                              {groupedExercises[muscleGroup].map(ex => (
-                                <div key={ex.id} className="exercise-item">
-                                  <div>
-                                    <strong>{ex.name}</strong>
-                                    <p style={{ fontSize: '0.8rem', color: '#666', marginTop: '4px' }}>
-                                      {ex.type} • {ex.equipment}
-                                    </p>
-                                  </div>
-                                  <button 
-                                    className="btn-secondary add-btn" 
-                                    onClick={() => handleAddExerciseToWorkout(ex)}
-                                    disabled={!selectedClientForWorkout}
-                                    title={!selectedClientForWorkout ? "Seleziona un cliente prima" : "Aggiungi alla scheda"}
-                                  >
-                                    +
-                                  </button>
-                                </div>
-                              ))}
+                    Object.keys(groupedExercises).sort().map(muscleGroup => (
+                      <details 
+                        key={muscleGroup} 
+                        className="muscle-group-accordion"
+                        open={exerciseSearchQuery !== ''}
+                      >
+                        <summary className="muscle-category-title">
+                          {muscleGroup.toUpperCase()}
+                        </summary>
+                        <div className="accordion-content">
+                          {groupedExercises[muscleGroup].map(ex => (
+                            <div key={ex.id} className="exercise-item">
+                              <div>
+                                <strong>{ex.name}</strong>
+                                <p style={{ fontSize: '0.8rem', color: '#666', marginTop: '4px' }}>
+                                  {ex.type} • {ex.equipment}
+                                </p>
+                              </div>
+                              <button 
+                                className="btn-secondary add-btn" 
+                                onClick={() => handleAddExerciseToWorkout(ex)}
+                                disabled={!selectedClientForWorkout}
+                              >
+                                +
+                              </button>
                             </div>
-                          )}
+                          ))}
                         </div>
-                      )
-                    })
+                      </details>
+                    ))
                   ) : (
                     <p style={{ color: '#666', textAlign: 'center', marginTop: '20px' }}>Nessun esercizio trovato.</p>
                   )}
                 </div>
               </div>
 
-              {/* PARTE DESTRA: Scheda Attuale */}
               <div className="builder-section">
                 <h3 style={{ marginBottom: '15px', paddingBottom: '10px', borderBottom: '2px solid #f7f9fc' }}>Scheda in Costruzione</h3>
                 
                 {!selectedClientForWorkout ? (
                   <div className="empty-state">
-                    <p>Seleziona un cliente in alto a destra per iniziare a costruire la scheda.</p>
+                    <p>Seleziona un cliente in alto per iniziare a costruire la scheda.</p>
                   </div>
                 ) : currentWorkout.length === 0 ? (
                   <div className="empty-state">
-                    <p>La scheda è vuota. Apri le categorie a sinistra e seleziona gli esercizi.</p>
+                    <p>La scheda è vuota. Seleziona gli esercizi dalle categorie a sinistra.</p>
                   </div>
                 ) : (
                   <>
@@ -347,37 +344,32 @@ function App() {
           </div>
         );
       }
-
-      default:
-        return <h1>404 - Vista non trovata</h1>;
+      default: return <h1>404</h1>;
     }
   };
 
   return (
     <div className="dashboard-layout">
       
-      <aside className="sidebar">
+      {/* OVERLAY MOBILE PER CHIUDERE LA SIDEBAR CLICCANDO FUORI */}
+      {isMobileMenuOpen && (
+        <div className="mobile-overlay-sidebar" onClick={() => setIsMobileMenuOpen(false)}></div>
+      )}
+
+      {/* SIDEBAR CON CLASSE DINAMICA PER MOBILE */}
+      <aside className={`sidebar ${isMobileMenuOpen ? 'open' : ''}`}>
         <div className="logo">
           <h2>PT Dashboard</h2>
         </div>
         <nav>
           <ul className="nav-list">
-            <li 
-              className={currentView === 'panoramica' ? 'active' : ''} 
-              onClick={() => setCurrentView('panoramica')}
-            >
+            <li className={currentView === 'panoramica' ? 'active' : ''} onClick={() => changeView('panoramica')}>
               <span className="icon">📊</span> Panoramica
             </li>
-            <li 
-              className={currentView === 'clienti' ? 'active' : ''} 
-              onClick={() => setCurrentView('clienti')}
-            >
+            <li className={currentView === 'clienti' ? 'active' : ''} onClick={() => changeView('clienti')}>
               <span className="icon">👥</span> Clienti
             </li>
-            <li 
-              className={currentView === 'schede' ? 'active' : ''} 
-              onClick={() => setCurrentView('schede')}
-            >
+            <li className={currentView === 'schede' ? 'active' : ''} onClick={() => changeView('schede')}>
               <span className="icon">📋</span> Schede Allenamento
             </li>
           </ul>
@@ -385,6 +377,11 @@ function App() {
       </aside>
 
       <header className="top-header">
+        {/* BOTTONE HAMBURGER (Visibile solo su mobile via CSS) */}
+        <button className="hamburger-btn" onClick={() => setIsMobileMenuOpen(true)}>
+          ☰
+        </button>
+
         <div className="search-bar">
           <span className="icon">🔍</span>
           <input 
@@ -396,7 +393,7 @@ function App() {
         </div>
         <div className="user-profile">
           <span className="icon">👤</span>
-          <strong>Gennaro - Head Coach</strong>
+          <strong className="profile-name">Gennaro - Coach</strong>
         </div>
       </header>
 
@@ -419,7 +416,7 @@ function App() {
               />
               <input 
                 type="text" 
-                placeholder="Obiettivo (es. Ipertrofia, Forza...)" 
+                placeholder="Obiettivo (es. Ipertrofia)" 
                 required 
                 value={newClientGoal}
                 onChange={(e) => setNewClientGoal(e.target.value)}
@@ -437,20 +434,12 @@ function App() {
               
               <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
                 <button type="submit" className="btn-primary" style={{ flex: 1 }}>Salva</button>
-                <button 
-                  type="button" 
-                  className="btn-secondary" 
-                  style={{ flex: 1 }} 
-                  onClick={() => setIsModalOpen(false)}
-                >
-                  Annulla
-                </button>
+                <button type="button" className="btn-secondary" style={{ flex: 1 }} onClick={() => setIsModalOpen(false)}>Annulla</button>
               </div>
             </form>
           </div>
         </div>
       )}
-
     </div>
   );
 }
