@@ -7,7 +7,8 @@ function App() {
   const [currentView, setCurrentView] = useState('panoramica');
   const [searchQuery, setSearchQuery] = useState(''); 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // NUOVO STATO MOBILE
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false); // STATO DARK MODE
 
   // --- STATO DEI DATI ---
   const [clients, setClients] = useState(mockClients);
@@ -79,10 +80,9 @@ function App() {
     setExerciseSearchQuery('');
   };
 
-  // Funzione helper per la navigazione mobile
   const changeView = (view) => {
     setCurrentView(view);
-    setIsMobileMenuOpen(false); // Chiude la sidebar se sei su mobile
+    setIsMobileMenuOpen(false);
   };
 
   // --- RENDERIZZAZIONE DEL CONTENUTO CENTRALE ---
@@ -120,25 +120,25 @@ function App() {
 
         return (
           <div className="dashboard-view">
-            <h1 style={{ marginBottom: '30px', color: '#1a1a2e' }}>Panoramica</h1>
+            <h1 style={{ marginBottom: '30px' }}>Panoramica</h1>
             
             <div className="kpi-row">
               <div className="kpi-card">
-                <h3>Clienti Attivi</h3>
+                <h2>Clienti Attivi</h2>
                 <p>{activeClientsCount}</p>
               </div>
               <div className="kpi-card">
-                <h3>Totale Clienti</h3>
+                <h2>Totale Clienti</h2>
                 <p>{totalClients}</p>
               </div>
               <div className="kpi-card">
-                <h3>Esercizi</h3>
+                <h2>Esercizi</h2>
                 <p>{totalExercises}</p>
               </div>
             </div>
 
             <div className="chart-container">
-              <h3 style={{ marginBottom: '20px', color: '#1a1a2e' }}>Distribuzione Obiettivi</h3>
+              <h2 style={{ marginBottom: '20px' }}>Distribuzione Obiettivi</h2>
               <div className="chart-layout">
                 <div className="mock-pie-chart" style={dynamicGradient}></div>
                 <div className="chart-legend">
@@ -163,7 +163,7 @@ function App() {
         return (
           <div>
             <div className="view-header">
-              <h1 style={{ color: '#1a1a2e' }}>Gestione Clienti</h1>
+              <h1>Gestione Clienti</h1>
               <button className="btn-primary" onClick={() => setIsModalOpen(true)}>
                 + Nuovo Cliente
               </button>
@@ -173,7 +173,7 @@ function App() {
               {filteredClients.map(client => (
                 <div key={client.id} className="client-card">
                   <div className="card-header">
-                    <h3>{client.name}</h3>
+                    <h2>{client.name}</h2>
                     <span className={`badge ${client.status === 'Attivo' ? 'badge-active' : 'badge-paused'}`}>
                       {client.status}
                     </span>
@@ -205,7 +205,7 @@ function App() {
               ))}
               
               {filteredClients.length === 0 && (
-                <p style={{ gridColumn: '1 / -1', color: '#666' }}>Nessun cliente trovato.</p>
+                <p style={{ gridColumn: '1 / -1', color: '#888' }}>Nessun cliente trovato.</p>
               )}
             </div>
           </div>
@@ -226,7 +226,7 @@ function App() {
         return (
           <div className="dashboard-view">
             <div className="view-header">
-              <h1 style={{ color: '#1a1a2e' }}>Creazione Scheda</h1>
+              <h1>Creazione Scheda</h1>
               <select 
                 value={selectedClientForWorkout} 
                 onChange={(e) => setSelectedClientForWorkout(e.target.value)}
@@ -241,7 +241,7 @@ function App() {
 
             <div className="workout-builder">
               <div className="builder-section">
-                <h3 style={{ marginBottom: '15px' }}>Catalogo Esercizi</h3>
+                <h2 style={{ marginBottom: '15px' }}>Catalogo Esercizi</h2>
                 
                 <div className="exercise-filters">
                   <input 
@@ -269,7 +269,7 @@ function App() {
                             <div key={ex.id} className="exercise-item">
                               <div>
                                 <strong>{ex.name}</strong>
-                                <p style={{ fontSize: '0.8rem', color: '#666', marginTop: '4px' }}>
+                                <p style={{ fontSize: '0.8rem', color: '#888', marginTop: '4px' }}>
                                   {ex.type} • {ex.equipment}
                                 </p>
                               </div>
@@ -286,13 +286,13 @@ function App() {
                       </details>
                     ))
                   ) : (
-                    <p style={{ color: '#666', textAlign: 'center', marginTop: '20px' }}>Nessun esercizio trovato.</p>
+                    <p style={{ color: '#888', textAlign: 'center', marginTop: '20px' }}>Nessun esercizio trovato.</p>
                   )}
                 </div>
               </div>
 
               <div className="builder-section">
-                <h3 style={{ marginBottom: '15px', paddingBottom: '10px', borderBottom: '2px solid #f7f9fc' }}>Scheda in Costruzione</h3>
+                <h2 style={{ marginBottom: '15px', paddingBottom: '10px', borderBottom: '2px solid var(--border-color)' }}>Scheda in Costruzione</h2>
                 
                 {!selectedClientForWorkout ? (
                   <div className="empty-state">
@@ -319,7 +319,7 @@ function App() {
                                 onChange={(e) => updateWorkoutItem(index, 'sets', e.target.value)} 
                               />
                             </div>
-                            <span style={{ marginTop: '15px', color: '#666' }}>x</span>
+                            <span style={{ marginTop: '15px', color: '#888' }}>x</span>
                             <div className="input-group">
                               <label>Rip</label>
                               <input 
@@ -349,14 +349,12 @@ function App() {
   };
 
   return (
-    <div className="dashboard-layout">
+    <div className={`dashboard-layout ${isDarkMode ? 'dark-mode' : ''}`}>
       
-      {/* OVERLAY MOBILE PER CHIUDERE LA SIDEBAR CLICCANDO FUORI */}
       {isMobileMenuOpen && (
         <div className="mobile-overlay-sidebar" onClick={() => setIsMobileMenuOpen(false)}></div>
       )}
 
-      {/* SIDEBAR CON CLASSE DINAMICA PER MOBILE */}
       <aside className={`sidebar ${isMobileMenuOpen ? 'open' : ''}`}>
         <div className="logo">
           <h2>PT Dashboard</h2>
@@ -377,7 +375,6 @@ function App() {
       </aside>
 
       <header className="top-header">
-        {/* BOTTONE HAMBURGER (Visibile solo su mobile via CSS) */}
         <button className="hamburger-btn" onClick={() => setIsMobileMenuOpen(true)}>
           ☰
         </button>
@@ -391,9 +388,21 @@ function App() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <div className="user-profile">
-          <span className="icon">👤</span>
-          <strong className="profile-name">Gennaro - Coach</strong>
+
+        <div className="header-actions">
+          {/* BOTTONE TOGGLE DARK MODE */}
+          <button 
+            className="theme-toggle-btn" 
+            onClick={() => setIsDarkMode(!isDarkMode)}
+            title={isDarkMode ? "Passa a tema Chiaro" : "Passa a tema Scuro"}
+          >
+            {isDarkMode ? '☀️ Chiaro' : '🌙 Scuro'}
+          </button>
+
+          <div className="user-profile">
+            <span className="icon">👤</span>
+            <strong className="profile-name">Gennaro - Coach</strong>
+          </div>
         </div>
       </header>
 
@@ -401,7 +410,6 @@ function App() {
         {renderMainContent()}
       </main>
 
-      {/* MODALE NUOVO CLIENTE */}
       {isModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content">
